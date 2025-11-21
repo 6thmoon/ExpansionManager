@@ -44,7 +44,7 @@ public static class ItemBlockers
         }
         for (int i = self.weightedSelection.Count; i >= 0; i--)
         {
-            PickupIndex pickupIndex = self.weightedSelection.GetChoice(i).value;
+            PickupIndex pickupIndex = self.weightedSelection.GetChoice(i).value.pickupIndex;
             PickupDef pickupDef = PickupCatalog.GetPickupDef(pickupIndex);
             if (pickupDef != null && (pickupDef.itemIndex != ItemIndex.None || pickupDef.equipmentIndex != EquipmentIndex.None))
             {
