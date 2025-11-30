@@ -3,11 +3,12 @@ using Mono.Cecil.Cil;
 using MonoMod.Cil;
 using RoR2.ExpansionManagement;
 using UnityEngine.AddressableAssets;
+using UnityEngine.ResourceManagement.AsyncOperations;
 
 namespace ExpansionManager.Fixes;
 
 // Most DLC stages do not have a base monster pool
-// and the monster pool on some stages is left especially barren if the expanions's monsters are disabled
+// and the monster pool on some stages is left especially barren if the expansion's monsters are disabled
 // We add a few new monsters to fill in the gaps in this situation
 public static class DeadDccsAdditions
 {
@@ -24,16 +25,25 @@ public static class DeadDccsAdditions
         { "dccsHelminthRoostMonstersDLC2Only", HelminthRoostMonstersDLC2Only },
     };
 
+    public static AsyncOperationHandle<SpawnCard>
+        cscBell = Addressables.LoadAssetAsync<SpawnCard>("RoR2/Base/Bell/cscBell.asset"),
+        cscLesserWisp = Addressables.LoadAssetAsync<SpawnCard>("RoR2/Base/Wisp/cscLesserWisp.asset"),
+        cscMagmaWorm = Addressables.LoadAssetAsync<SpawnCard>("RoR2/Base/MagmaWorm/cscMagmaWorm.asset"),
+        cscScorchling = Addressables.LoadAssetAsync<SpawnCard>("RoR2/DLC2/Scorchling/cscScorchling.asset"),
+        cscHermitCrab = Addressables.LoadAssetAsync<SpawnCard>("RoR2/Base/HermitCrab/cscHermitCrab.asset"),
+        cscLemurian = Addressables.LoadAssetAsync<SpawnCard>("RoR2/Base/Lemurian/cscLemurian.asset"),
+        cscImp = Addressables.LoadAssetAsync<SpawnCard>("RoR2/Base/Imp/cscImp.asset");
+
     public static void AncientLoftMonstersDLC1(DirectorCardCategorySelection dccs)
     {
         dccs.AttemptAddCard(MINIBOSSES, new DirectorCard
         {
-            spawnCard = Addressables.LoadAssetAsync<SpawnCard>("RoR2/Base/Bell/cscBell.asset").WaitForCompletion(),
+            spawnCard = cscBell.WaitForCompletion(),
             selectionWeight = 1,
         });
         dccs.AttemptAddCard(BASIC_MONSTERS, new DirectorCard
         {
-            spawnCard = Addressables.LoadAssetAsync<SpawnCard>("RoR2/Base/Wisp/cscLesserWisp.asset").WaitForCompletion(),
+            spawnCard = cscLesserWisp.WaitForCompletion(),
             selectionWeight = 1,
             preventOverhead = true,
         });
@@ -43,25 +53,25 @@ public static class DeadDccsAdditions
     {
         dccs.AttemptAddCard(CHAMPIONS, new DirectorCard
         {
-            spawnCard = Addressables.LoadAssetAsync<SpawnCard>("RoR2/Base/MagmaWorm/cscMagmaWorm.asset").WaitForCompletion(),
+            spawnCard = cscMagmaWorm.WaitForCompletion(),
             selectionWeight = 1,
         });
         dccs.AttemptAddCard(BASIC_MONSTERS, new DirectorCard
         {
-            spawnCard = Addressables.LoadAssetAsync<SpawnCard>("RoR2/DLC2/Scorchling/cscScorchling.asset").WaitForCompletion(),
+            spawnCard = cscScorchling.WaitForCompletion(),
             selectionWeight = 1,
             spawnDistance = DirectorCore.MonsterSpawnDistance.Far,
         });
         dccs.AttemptAddCard(BASIC_MONSTERS, new DirectorCard
         {
-            spawnCard = Addressables.LoadAssetAsync<SpawnCard>("RoR2/Base/HermitCrab/cscHermitCrab.asset").WaitForCompletion(),
+            spawnCard = cscHermitCrab.WaitForCompletion(),
             selectionWeight = 1,
             spawnDistance = DirectorCore.MonsterSpawnDistance.Far,
             preventOverhead = true,
         });
         dccs.AttemptAddCard(BASIC_MONSTERS, new DirectorCard
         {
-            spawnCard = Addressables.LoadAssetAsync<SpawnCard>("RoR2/Base/Lemurian/cscLemurian.asset").WaitForCompletion(),
+            spawnCard = cscLemurian.WaitForCompletion(),
             selectionWeight = 2,
         });
     }
@@ -70,7 +80,7 @@ public static class DeadDccsAdditions
     {
         dccs.AttemptAddCard(BASIC_MONSTERS, new DirectorCard
         {
-            spawnCard = Addressables.LoadAssetAsync<SpawnCard>("RoR2/Base/Imp/cscImp.asset").WaitForCompletion(),
+            spawnCard = cscImp.WaitForCompletion(),
             selectionWeight = 2,
         });
     }
@@ -89,39 +99,29 @@ public static class DeadDccsAdditions
     [SystemInitializer]
     private static void Init()
     {
-        IL.RoR2.ClassicStageInfo.RebuildCards += ClassicStageInfo_RebuildCards;
+        On.RoR2.DCCSBlender.MergeCategories += DCCSBlender_MergeCategories;
     }
 
-    private static void ClassicStageInfo_RebuildCards(ILContext il)
+    private static void DCCSBlender_MergeCategories(On.RoR2.DCCSBlender.orig_MergeCategories orig, ref DirectorCardCategorySelection blendedDCCS, List<WeightedSelection<DirectorCardCategorySelection>.ChoiceInfo> selectedDCCSList)
     {
-        ILCursor c = new ILCursor(il);
-        if (c.TryGotoNext(MoveType.After,
-            x => x.MatchStfld<ClassicStageInfo>(nameof(ClassicStageInfo.modifiableMonsterCategories)))
-            )
+        orig(ref blendedDCCS, selectedDCCSList);
+        foreach (WeightedSelection<DirectorCardCategorySelection>.ChoiceInfo choiceInfo in selectedDCCSList)
         {
-            c.Emit(OpCodes.Ldarg_0);
-            c.EmitDelegate<Action<ClassicStageInfo>>(classicStageInfo =>
+            string name = choiceInfo.value.name;
+            if (name.EndsWith("(Clone)"))
             {
-                if (classicStageInfo.modifiableMonsterCategories)
+                name = name.Remove(name.Length - 7);
+            }
+            if (monsterSelectionAdditions.TryGetValue(name, out var addCards))
+            {
+                SceneDef sceneDef = SceneInfo.instance ? SceneInfo.instance.sceneDef : null;
+                ExpansionDef requiredExpansion = sceneDef ? sceneDef.requiredExpansion : null;
+                if (requiredExpansion && Run.instance.AreExpansionMonstersDisabled(requiredExpansion))
                 {
-                    string name = classicStageInfo.modifiableMonsterCategories.name;
-                    if (name.EndsWith("(Clone)"))
-                    {
-                        name = name.Remove(name.Length - 7);
-                    }
-                    if (monsterSelectionAdditions.TryGetValue(name, out var addCards))
-                    {
-                        SceneDef sceneDef = SceneInfo.instance ? SceneInfo.instance.sceneDef : null;
-                        ExpansionDef requiredExpansion = sceneDef ? sceneDef.requiredExpansion : null;
-                        if (requiredExpansion && Run.instance.AreExpansionMonstersDisabled(requiredExpansion))
-                        {
-                            ExpansionManagerPlugin.Logger.LogInfo($"{nameof(DeadDccsAdditions)}: {requiredExpansion.name} has monsters disabled, Adding monster cards to {name}");
-                            addCards(classicStageInfo.modifiableMonsterCategories);
-                        }
-                    }
+                    ExpansionManagerPlugin.Logger.LogInfo($"{nameof(DeadDccsAdditions)}: {requiredExpansion.name} has monsters disabled, Adding monster cards to {name}");
+                    addCards(blendedDCCS);
                 }
-            });
+            }
         }
-        else ExpansionManagerPlugin.Logger.LogError($"{nameof(DeadDccsAdditions)}: {nameof(ClassicStageInfo_RebuildCards)} IL match failed");
     }
 }
