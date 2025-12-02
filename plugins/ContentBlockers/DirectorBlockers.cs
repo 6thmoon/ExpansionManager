@@ -27,15 +27,15 @@ public static class DirectorBlockers
             c.Emit(OpCodes.Ldloc, locExpansionIndex);
             c.EmitDelegate<Func<bool, DccsPool, ExpansionDef, bool>>((result, dccsPool, requiredExpansion) =>
             {
-                if (ClassicStageInfo.instance)
+                if (result && ClassicStageInfo.instance)
                 {
                     if (dccsPool == ClassicStageInfo.instance.monsterDccsPool)
                     {
-                        return result && !Run.instance.AreExpansionMonstersDisabled(requiredExpansion);
+                        return !Run.instance.AreExpansionMonstersDisabled(requiredExpansion);
                     }
                     else if (dccsPool == ClassicStageInfo.instance.interactableDccsPool)
                     {
-                        return result && !Run.instance.AreExpansionInteractablesDisabled(requiredExpansion);
+                        return !Run.instance.AreExpansionInteractablesDisabled(requiredExpansion);
                     }
                 }
                 return result;
@@ -94,11 +94,11 @@ public static class DirectorBlockers
             c.Emit(OpCodes.Ldloc, locExpansionRequirementIndex);
             c.EmitDelegate<Func<bool, DirectorCard, ExpansionRequirementComponent, bool>>((result, directorCard, expansionRequirement) =>
             {
-                return directorCard.spawnCard switch
+                return result && directorCard.spawnCard switch
                 {
-                    CharacterSpawnCard => result && !Run.instance.AreExpansionMonstersDisabled(expansionRequirement.requiredExpansion),
-                    InteractableSpawnCard => result && !Run.instance.AreExpansionInteractablesDisabled(expansionRequirement.requiredExpansion),
-                    _ => result
+                    CharacterSpawnCard => !Run.instance.AreExpansionMonstersDisabled(expansionRequirement.requiredExpansion),
+                    InteractableSpawnCard => !Run.instance.AreExpansionInteractablesDisabled(expansionRequirement.requiredExpansion),
+                    _ => true
                 };
             });
         }

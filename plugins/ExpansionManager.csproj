@@ -60,6 +60,7 @@
 	</PropertyGroup>
 
 	<Target Name="PostBuild" AfterTargets="PostBuildEvent">
+		<Delete Files="$(TargetDir)$(TargetName).pdb" Condition="'$(Configuration)'=='Release'" />
 		<Delete Files="$(TargetDir)$(TargetName).deps.json" />
 		<ZipDirectory SourceDirectory="$(BaseOutputPath)\$(MSBuildProjectName)" Overwrite="True" DestinationFile="$(BaseOutputPath)\$(MSBuildProjectName).zip" />
 	</Target>

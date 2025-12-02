@@ -26,15 +26,38 @@ public static class DropTableFallbacks
     [SystemInitializer]
     private static void Init()
     {
+        On.RoR2.PickupDropTable.GeneratePickup += PickupDropTable_GeneratePickup;
+        On.RoR2.PickupDropTable.GenerateDistinctPickups += PickupDropTable_GenerateDistinctPickups;
         On.RoR2.PickupDropTable.GenerateDrop += PickupDropTable_GenerateDrop;
         On.RoR2.PickupDropTable.GenerateUniqueDrops += PickupDropTable_GenerateUniqueDrops;
+    }
+
+    private static void PickupDropTable_GenerateDistinctPickups(On.RoR2.PickupDropTable.orig_GenerateDistinctPickups orig, PickupDropTable self, List<UniquePickup> dest, int desiredCount, Xoroshiro128Plus rng, bool allowLoop = true)
+    {
+        if (DropTableFallback(self, out PickupDropTable fallbackDropTable))
+        {
+            fallbackDropTable.GenerateDistinctPickups(dest, desiredCount, rng, allowLoop);
+            return;
+        }
+        orig(self, dest, desiredCount, rng, allowLoop);
+    }
+
+    private static UniquePickup PickupDropTable_GeneratePickup(On.RoR2.PickupDropTable.orig_GeneratePickup orig, PickupDropTable self, Xoroshiro128Plus rng)
+    {
+        if (DropTableFallback(self, out PickupDropTable fallbackDropTable))
+        {
+            return fallbackDropTable.GeneratePickup(rng);
+        }
+        return orig(self, rng);
     }
 
     private static PickupIndex[] PickupDropTable_GenerateUniqueDrops(On.RoR2.PickupDropTable.orig_GenerateUniqueDrops orig, PickupDropTable self, int maxDrops, Xoroshiro128Plus rng)
     {
         if (DropTableFallback(self, out PickupDropTable fallbackDropTable))
         {
+#pragma warning disable CS0618 // Type or member is obsolete
             return fallbackDropTable.GenerateUniqueDrops(maxDrops, rng);
+#pragma warning restore CS0618 // Type or member is obsolete
         }
         return orig(self, maxDrops, rng);
     }
@@ -43,7 +66,9 @@ public static class DropTableFallbacks
     {
         if (DropTableFallback(self, out PickupDropTable fallbackDropTable))
         {
+#pragma warning disable CS0618 // Type or member is obsolete
             return fallbackDropTable.GenerateDrop(rng);
+#pragma warning restore CS0618 // Type or member is obsolete
         }
         return orig(self, rng);
     }

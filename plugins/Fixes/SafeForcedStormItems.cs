@@ -17,28 +17,30 @@ public static class SafeForcedStormItems
     private static void PickupPickerController_GenerateOptionsFromDropTablePlusForcedStorm(ILContext il)
     {
         ILCursor c = new ILCursor(il);
-        int locStormDropsArrayIndex = -1;
+        int locStormDropsListIndex = -1;
         int locElementIndex = -1;
         ILLabel breakLabel = null;
         if (c.TryGotoNext(MoveType.After,
             x => x.MatchLdarg(2),
+            x => x.MatchLdloc(out locStormDropsListIndex),
             x => x.MatchLdarg(0),
             x => x.MatchLdarg(3),
-            x => x.MatchCallOrCallvirt<PickupDropTable>(nameof(PickupDropTable.GenerateUniqueDrops)),
-            x => x.MatchStloc(out locStormDropsArrayIndex))
+            x => x.MatchLdcI4(1),
+            x => x.MatchCallOrCallvirt<PickupDropTable>(nameof(PickupDropTable.GenerateDistinctPickups)))
             && c.TryGotoNext(MoveType.Before,
-            x => x.MatchLdloc(locStormDropsArrayIndex),
+            x => x.MatchLdloc(locStormDropsListIndex),
             x => x.MatchLdloc(out locElementIndex),
-            x => x.MatchLdelemAny<PickupIndex>())
+            x => x.MatchCallvirt(out _),    // good enough, should be list indexer i.e. `List<UniquePickup>.get_Item`
+            x => x.MatchStfld<PickupPickerController.Option>(nameof(PickupPickerController.Option.pickup)))
             && c.TryGotoPrev(MoveType.After,
             x => x.MatchBgt(out breakLabel))
             )
         {
-            c.Emit(OpCodes.Ldloc, locStormDropsArrayIndex);
+            c.Emit(OpCodes.Ldloc, locStormDropsListIndex);
             c.Emit(OpCodes.Ldloc, locElementIndex);
-            c.EmitDelegate<Func<PickupIndex[], int, bool>>((stormDropsArray, i) =>
+            c.EmitDelegate<Func<List<UniquePickup>, int, bool>>((stormDropsList, i) =>
             {
-                return ArrayUtils.IsInBounds(stormDropsArray, i);
+                return ListUtils.IsInBounds(stormDropsList, i);
             });
             c.Emit(OpCodes.Brfalse, breakLabel);
         }
