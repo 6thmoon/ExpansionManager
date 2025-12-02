@@ -48,6 +48,10 @@ public static class ItemBlockers
             PickupDef pickupDef = PickupCatalog.GetPickupDef(pickupIndex);
             if (pickupDef != null && (pickupDef.itemIndex != ItemIndex.None || pickupDef.equipmentIndex != EquipmentIndex.None))
             {
+                if (pickupDef.itemIndex == DLC3Content.Items.PowerCube.itemIndex)
+                {
+                    continue;
+                }
                 ExpansionDef requiredExpansion = pickupDef.GetRequiredExpansion();
                 if (requiredExpansion && Run.instance.AreExpansionItemsDisabled(requiredExpansion))
                 {

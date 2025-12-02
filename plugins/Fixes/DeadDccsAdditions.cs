@@ -3,6 +3,7 @@ using Mono.Cecil.Cil;
 using MonoMod.Cil;
 using RoR2.ExpansionManagement;
 using UnityEngine.AddressableAssets;
+using UnityEngine.Networking;
 using UnityEngine.ResourceManagement.AsyncOperations;
 
 namespace ExpansionManager.Fixes;
@@ -26,6 +27,7 @@ public static class DeadDccsAdditions
         { "dccsIronalluvium2MonstersDLC2", Ironalluvium2MonstersDLC2 },
         { "dccsRepurposedcraterMonstersDLC1", RepurposedCraterMonstersDLC1 },
         { "dccsConduitcanyonMonsters", ConduitCanyonMonsters },
+        { "dccsBallFamily_ItemThemed", BallFamily_ItemThemed },
     };
 
     public static AsyncOperationHandle<SpawnCard>
@@ -39,7 +41,8 @@ public static class DeadDccsAdditions
         cscChild = Addressables.LoadAssetAsync<SpawnCard>("RoR2/DLC2/Child/cscChild.asset"),
         cscMinorConstruct = Addressables.LoadAssetAsync<SpawnCard>("RoR2/DLC1/MajorAndMinorConstruct/cscMinorConstruct.asset"),
         cscMiniMushroom = Addressables.LoadAssetAsync<SpawnCard>("RoR2/Base/MiniMushroom/cscMiniMushroom.asset"),
-        cscImp = Addressables.LoadAssetAsync<SpawnCard>("RoR2/Base/Imp/cscImp.asset");
+        cscImp = Addressables.LoadAssetAsync<SpawnCard>("RoR2/Base/Imp/cscImp.asset"),
+        cscRoboBallBoss = Addressables.LoadAssetAsync<SpawnCard>("RoR2/Base/RoboBallBoss/cscRoboBallBoss.asset");
 
     public static void AncientLoftMonstersDLC1(DirectorCardCategorySelection dccs)
     {
@@ -127,6 +130,20 @@ public static class DeadDccsAdditions
         });
     }
 
+    public static void BallFamily_ItemThemed(DirectorCardCategorySelection dccs)
+    {
+        dccs.AttemptAddCard(CHAMPIONS, new DirectorCard
+        {
+            spawnCard = cscRoboBallBoss.WaitForCompletion(),
+            selectionWeight = 1,
+        });
+        dccs.AttemptAddCard(BASIC_MONSTERS, new DirectorCard
+        {
+            spawnCard = cscRoboBallMini.WaitForCompletion(),
+            selectionWeight = 1,
+        });
+    }
+
     public static bool AttemptAddCard(this DirectorCardCategorySelection dccs, string categoryName, DirectorCard card)
     {
         int categoryIndex = dccs.FindCategoryIndexByName(categoryName);
@@ -151,6 +168,7 @@ public static class DeadDccsAdditions
     private static void Init()
     {
         On.RoR2.DCCSBlender.MergeCategories += DCCSBlender_MergeCategories;
+        On.RoR2.CombatDirector.Awake += CombatDirector_Awake;
     }
 
     private static void DCCSBlender_MergeCategories(On.RoR2.DCCSBlender.orig_MergeCategories orig, ref DirectorCardCategorySelection blendedDCCS, List<WeightedSelection<DirectorCardCategorySelection>.ChoiceInfo> selectedDCCSList)
@@ -173,6 +191,29 @@ public static class DeadDccsAdditions
                     addCards(blendedDCCS);
                 }
             }
+        }
+    }
+
+    private static void CombatDirector_Awake(On.RoR2.CombatDirector.orig_Awake orig, CombatDirector self)
+    {
+        orig(self);
+        if (NetworkServer.active && self.monsterCards)
+        {
+            var dccs = new DirectorCardCategorySelection();
+            dccs.CopyFrom(self.monsterCards);
+            List<WeightedSelection<DirectorCardCategorySelection>.ChoiceInfo> source =
+            [
+                new WeightedSelection<DirectorCardCategorySelection>.ChoiceInfo
+                {
+                    value = self.monsterCards,
+                    weight = 1
+                }
+            ];
+            DCCSBlender_MergeCategories(none, ref dccs, source);
+            self.monsterCardsSelection = dccs.GenerateDirectorCardWeightedSelection();
+        }
+        static void none(ref DirectorCardCategorySelection blendedDCCS, List<WeightedSelection<DirectorCardCategorySelection>.ChoiceInfo> selectedDCCSList)
+        {
         }
     }
 }
