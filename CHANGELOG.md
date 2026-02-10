@@ -1,3 +1,7 @@
+## `1.1.3`
+- Translate lobby descriptions into Chinese, courtesy of @JunJun5406
+- As requested by @‍osunosairou, expansions can be hidden in the configuration file
+
 ## `1.1.2`
 - Interactables properly check for DLC requirement even on expansion-locked stages
 
