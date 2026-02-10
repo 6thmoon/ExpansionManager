@@ -1,0 +1,21 @@
+{
+	"strings": {
+		"EXPANSION_ITEMS": "新物品与装备",
+		"EXPANSION_ITEMS_DESC": "可生成「{0}」物品与装备。",
+		"EXPANSION_ITEMS_DESC_OFF": "无法生成「{0}」物品与装备。",
+		"EXPANSION_ELITES": "新精英怪物",
+		"EXPANSION_ELITES_DESC": "可自然生成「{0}」精英怪物。",
+		"EXPANSION_ELITES_DESC_OFF": "无法自然生成「{0}」精英怪物。",
+		"EXPANSION_STAGES": "新关卡",
+		"EXPANSION_STAGES_DESC": "可出现「{0}」关卡场景。",
+		"EXPANSION_STAGES_DESC_OFF": "无法出现「{0}」关卡场景。",
+		"EXPANSION_MONSTERS": "新怪物",
+		"EXPANSION_MONSTERS_DESC": "可生成「{0}」怪物。",
+		"EXPANSION_MONSTERS_DESC_OFF": "无法生成「{0}」怪物。",
+		"EXPANSION_INTERACTABLES": "新互动物体",
+		"EXPANSION_INTERACTABLES_DESC": "可生成「{0}」互动物体。",
+		"EXPANSION_INTERACTABLES_DESC_OFF": "无法生成「{0}」互动物体。",
+		"EXPANSION_CONTENT_ON": "\n+{0}",
+		"EXPANSION_CONTENT_OFF": "\n<style=cStack><s>+{0}</s></style>"
+	}
+}
