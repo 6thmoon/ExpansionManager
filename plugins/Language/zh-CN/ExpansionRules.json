@@ -1,7 +1,7 @@
 {
 	"strings": {
 		"EXPANSION_ITEMS": "新物品与装备",
-		"EXPANSION_ITEMS_DESC": "可生成「{0}」物品具与装备。",
+		"EXPANSION_ITEMS_DESC": "可生成「{0}」物品与装备。",
 		"EXPANSION_ITEMS_DESC_OFF": "无法生成「{0}」物品与装备。",
 		"EXPANSION_ELITES": "新精英怪物",
 		"EXPANSION_ELITES_DESC": "可自然生成「{0}」精英怪物。",
