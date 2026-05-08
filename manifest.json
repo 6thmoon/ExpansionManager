@@ -1,7 +1,7 @@
 {
     "name": "ExpansionManager",
     "author": "006",
-    "version_number": "1.1.3",
+    "version_number": "1.1.4",
     "website_url": "https://github.com/6thmoon/ExpansionManager",
     "description": "Finer control over DLC and other content. Vote on, and combine individual categories in the lobby.",
     "dependencies": [

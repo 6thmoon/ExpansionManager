@@ -43,7 +43,7 @@ public static class ItemBlockers
         {
             return;
         }
-        for (int i = self.weightedSelection.Count; i >= 0; i--)
+        for (int i = self.weightedSelection.Count; --i >= 0;)
         {
             PickupIndex pickupIndex = self.weightedSelection.GetChoice(i).value.pickupIndex;
             PickupDef pickupDef = PickupCatalog.GetPickupDef(pickupIndex);

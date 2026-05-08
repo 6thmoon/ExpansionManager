@@ -18,7 +18,7 @@ public class ExpansionManagerPlugin : BaseUnityPlugin
     public const string
             GUID = "groovesalad." + NAME,
             NAME = "ExpansionManager",
-            VERSION = "1.1.3";
+            VERSION = "1.1.4";
 
     public static new ManualLogSource Logger { get; private set; }
 

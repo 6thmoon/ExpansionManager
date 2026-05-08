@@ -1,0 +1,21 @@
+{
+	"strings": {
+		"EXPANSION_ITEMS": "Novos Itens e Equipamentos",
+		"EXPANSION_ITEMS_DESC": "Itens e equipamentos adicionados por '{0}' poderão ser encontrados em jogatinas.",
+		"EXPANSION_ITEMS_DESC_OFF": "Itens e equipamentos adicionados por '{0}' não poderão ser encontrados em jogatinas.",
+		"EXPANSION_ELITES": "Novos Tipos de Elites",
+		"EXPANSION_ELITES_DESC": "Inimigos de elite adicionados por '{0}' poderão surgir naturalmente em jogatinas.",
+		"EXPANSION_ELITES_DESC_OFF": "Inimigos de elite adicionados por '{0}' não poderão surgir naturalmente em jogatinas.",
+		"EXPANSION_STAGES": "Novas Fases",
+		"EXPANSION_STAGES_DESC": "Cenários adicionados por '{0}' poderão aparecer em jogatinas.",
+		"EXPANSION_STAGES_DESC_OFF": "Cenários adicionados por '{0}' não poderão aparecer em jogatinas.",
+		"EXPANSION_MONSTERS": "Novos Monstros",
+		"EXPANSION_MONSTERS_DESC": "Monstros adicionados por '{0}' poderão surgir naturalmente em jogatinas.",
+		"EXPANSION_MONSTERS_DESC_OFF": "Monstros adicionados por '{0}' não poderão surgir naturalmente em jogatinas.",
+		"EXPANSION_INTERACTABLES": "Novos Objetos Interativos",
+		"EXPANSION_INTERACTABLES_DESC": "Objetos interativos adicionados por '{0}' poderão ser encontrados em jogatinas.",
+		"EXPANSION_INTERACTABLES_DESC_OFF": "Objetos interativos adicionados por '{0}' não poderão ser encontrados em jogatinas.",
+		"EXPANSION_CONTENT_ON": "\n+{0}",
+		"EXPANSION_CONTENT_OFF": "\n<style=cStack><s>+{0}</s></style>"
+	}
+}
