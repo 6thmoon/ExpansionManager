@@ -59,7 +59,7 @@ public static class ExpansionRulesCatalog
 
         foreach (ExpansionDef expansionDef in ExpansionCatalog.expansionDefs)
         {
-            RuleCategoryDef ruleCategory = RuleCatalog.AddCategory(expansionDef.nameToken, expansionDef.descriptionToken, new Color32(219, 114, 114, byte.MaxValue), null, "RULE_HEADER_EXPANSIONS_EDIT", RuleCatalog.HiddenTestTrue, RuleCatalog.RuleCategoryType.VoteResultGrid);
+            RuleCategoryDef ruleCategory = RuleCatalog.AddCategory(expansionDef.nameToken, expansionDef.descriptionToken, new Color32(219, 114, 114, byte.MaxValue), null, "RULE_HEADER_EXPANSIONS_EDIT", RuleCatalog.HiddenTestFalse, RuleCatalog.RuleCategoryType.VoteResultGrid);
             expansionByRuleCategory[expansionDef.expansionIndex] = ruleCategory;
             ruleCategoryByExpansion[ruleCategory] = expansionDef;
 

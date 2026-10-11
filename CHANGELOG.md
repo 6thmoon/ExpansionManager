@@ -1,3 +1,6 @@
+## `1.2.0`
+- Hotfix for *Hallowed Concepts* update; does not yet handle any of the new content
+
 ## `1.1.4`
 - Fix off-by-one indexing bug that could completely break on custom drop tables
 - Thanks again to @osunosairo, for contributing Portuguese translation

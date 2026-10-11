@@ -1,5 +1,6 @@
 ﻿using BepInEx.Logging;
 using RoR2.ExpansionManagement;
+using System.Reflection;
 using System.Security;
 using System.Security.Permissions;
 using Path = System.IO.Path;
@@ -9,6 +10,7 @@ using Path = System.IO.Path;
 [assembly: SecurityPermission(SecurityAction.RequestMinimum, SkipVerification = true)]
 #pragma warning restore CS0618 // Type or member is obsolete
 [assembly: HG.Reflection.SearchableAttribute.OptIn]
+[assembly: AssemblyVersion(ExpansionManager.ExpansionManagerPlugin.VERSION)]
 
 namespace ExpansionManager;
 
@@ -18,7 +20,7 @@ public class ExpansionManagerPlugin : BaseUnityPlugin
     public const string
             GUID = "groovesalad." + NAME,
             NAME = "ExpansionManager",
-            VERSION = "1.1.4";
+            VERSION = "1.2.0";
 
     public static new ManualLogSource Logger { get; private set; }
 

@@ -87,7 +87,7 @@ public static class DirectorBlockers
         if (c.TryGotoNext(MoveType.After,
             x => x.MatchLdloc(out locExpansionRequirementIndex),
             x => x.MatchLdfld<ExpansionRequirementComponent>(nameof(ExpansionRequirementComponent.requiredExpansion)),
-            x => x.MatchCallOrCallvirt<Run>(nameof(Run.IsExpansionEnabled)))
+            x => x.MatchCallOrCallvirt<Run>(nameof(Run.IsExpansionEnabledOrWaived)))
             )
         {
             c.Emit(OpCodes.Ldarg_0);

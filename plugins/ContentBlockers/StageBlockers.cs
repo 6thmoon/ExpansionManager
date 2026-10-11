@@ -8,12 +8,12 @@ public static class StageBlockers
     [SystemInitializer]
     private static void Init()
     {
-        On.RoR2.PortalSpawner.isValidStage += PortalSpawner_isValidStage;
+        On.RoR2.PortalSpawner.IsValidStage += PortalSpawner_IsValidStage;
         IL.RoR2.BazaarController.SetUpSeerStations += BazaarController_SetUpSeerStations;
         On.RoR2.Run.CanPickStage += Run_CanPickStage;
     }
 
-    private static bool PortalSpawner_isValidStage(On.RoR2.PortalSpawner.orig_isValidStage orig, PortalSpawner self)
+    private static bool PortalSpawner_IsValidStage(On.RoR2.PortalSpawner.orig_IsValidStage orig, PortalSpawner self)
     {
         return orig(self) && (!self.requiredExpansion || !Run.instance.AreExpansionStagesDisabled(self.requiredExpansion));
     }

@@ -81,13 +81,14 @@ public static class ExpansionManagerUI
         orig(self, displayChoiceDef);
         if (displayChoiceDef.extraData is ExpansionRulesCatalog.ExpansionContentRule expansionContentRule)
         {
+            ExpansionDef expansionDef = expansionContentRule.expansionDef;
             if (self.image)
             {
                 Transform subIconTransform = self.image.transform.parent.Find("SubIcon");
-                Image subIcon = subIconTransform ? subIconTransform.GetComponent<Image>() : null;
+                AsyncImage subIcon = subIconTransform ? subIconTransform.GetComponent<AsyncImage>() : null;
                 if (!subIcon)
                 {
-                    subIcon = new GameObject("SubIcon", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image)).GetComponent<Image>();
+                    subIcon = new GameObject("SubIcon", typeof(RectTransform), typeof(CanvasRenderer), typeof(AsyncImage)).GetComponent<AsyncImage>();
                     subIcon.transform.SetParent(self.image.transform.parent, false);
                     Transform hoverOutline = subIcon.transform.parent.Find("HoverOutline");
                     if (hoverOutline)
@@ -99,11 +100,20 @@ public static class ExpansionManagerUI
                     rectTransform.sizeDelta = new Vector2(32f, 32f);
                     rectTransform.localPosition = new Vector3(-20f, 20f);
                 }
-                subIcon.sprite = expansionContentRule.enabled ? expansionContentRule.expansionDef.iconSprite : expansionContentRule.expansionDef.disabledIconSprite;
+                AssetReferenceT<Sprite> asset = expansionDef.disabledIconSpriteReference;
+#pragma warning disable CS0618 // Type or member is obsolete
+                Sprite sprite = expansionDef.disabledIconSprite;
+                if (expansionContentRule.enabled)
+                {
+                    sprite = expansionDef.iconSprite;
+#pragma warning restore CS0618 // Type or member is obsolete
+                    asset = expansionDef.iconSpriteReference;
+                }
+                subIcon.SetAssetOrDirectReference(asset, sprite);
             }
             foreach (RuleChoiceController ruleChoiceController in RuleChoiceController.instancesList)
             {
-                if (ruleChoiceController.choiceDef != null && ruleChoiceController.choiceDef.extraData as ExpansionDef == expansionContentRule.expansionDef)
+                if (ruleChoiceController.choiceDef != null && ruleChoiceController.choiceDef.extraData as ExpansionDef == expansionDef)
                 {
                     ruleChoiceController.UpdateChoiceDisplay(ruleChoiceController.choiceDef);
                 }
@@ -255,6 +265,10 @@ public static class ExpansionManagerUI
                     }
                 }
             }
+            var hidden = new GameObject();
+            hidden.transform.SetParent(self.transform.parent, false);
+            self.transform.SetParent(hidden.transform);
+            hidden.SetActive(false);
         }
         else if (categoryDef.displayToken == EXPANSIONS_DISPLAY_TOKEN)
         {
