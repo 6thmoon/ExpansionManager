@@ -199,7 +199,7 @@ public static class DeadDccsAdditions
         orig(self);
         if (NetworkServer.active && self.monsterCards)
         {
-            var dccs = new DirectorCardCategorySelection();
+            var dccs = ScriptableObject.CreateInstance<DirectorCardCategorySelection>();
             dccs.CopyFrom(self.monsterCards);
             List<WeightedSelection<DirectorCardCategorySelection>.ChoiceInfo> source =
             [

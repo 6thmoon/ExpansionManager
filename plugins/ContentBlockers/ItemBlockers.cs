@@ -47,9 +47,17 @@ public static class ItemBlockers
         {
             PickupIndex pickupIndex = self.weightedSelection.GetChoice(i).value.pickupIndex;
             PickupDef pickupDef = PickupCatalog.GetPickupDef(pickupIndex);
-            if (pickupDef != null && (pickupDef.itemIndex != ItemIndex.None || pickupDef.equipmentIndex != EquipmentIndex.None))
+            if (pickupDef != null)
             {
-                if (pickupDef.itemIndex == DLC3Content.Items.PowerCube.itemIndex)
+                ItemIndex itemIndex = pickupDef.itemIndex;
+                if (itemIndex is not ItemIndex.None)
+                {
+                    if (ItemCatalog.GetItemDef(itemIndex).ContainsTag(ItemTag.WorldUnique))
+                    {
+                        continue;
+                    }
+                }
+                else if (pickupDef.equipmentIndex is EquipmentIndex.None)
                 {
                     continue;
                 }
@@ -75,28 +83,27 @@ public static class ItemBlockers
         {
             c.Emit(OpCodes.Ldarg_0);
             c.Emit(OpCodes.Ldloc, locChoiceDefIndex);
-            c.EmitDelegate<Func<bool, PreGameController, RuleChoiceDef, bool>>((result, preGameController, choiceDef) =>
+            c.EmitDelegate((PreGameController controller, RuleChoiceDef choice) =>
             {
-                bool IsValidItem()
+                if (ExpansionRulesCatalog.IsExpansionContentDisabled(controller.readOnlyRuleBook, choice.requiredExpansionDef, ExpansionRulesCatalog.disableExpansionItemsChoices))
                 {
-                    return choiceDef.itemIndex != ItemIndex.None;
-                }
-                bool IsValidEquipment()
-                {
-                    if (choiceDef.equipmentIndex == EquipmentIndex.None)
+                    ItemDef itemDef = ItemCatalog.GetItemDef(choice.itemIndex);
+                    if (itemDef)
                     {
-                        return false;
+                        return itemDef.ContainsTag(ItemTag.WorldUnique) && itemDef.tier is not ItemTier.FoodTier;
                     }
-                    EquipmentDef equipmentDef = EquipmentCatalog.GetEquipmentDef(choiceDef.equipmentIndex);
-                    return equipmentDef && !equipmentDef.IsElite();
+                    else
+                    {
+                        EquipmentDef equipmentDef = EquipmentCatalog.GetEquipmentDef(choice.equipmentIndex);
+                        if (equipmentDef)
+                        {
+                            return equipmentDef.IsElite();
+                        }
+                    }
                 }
-
-                if (IsValidItem() || IsValidEquipment())
-                {
-                    return result && !ExpansionRulesCatalog.IsExpansionContentDisabled(preGameController.readOnlyRuleBook, choiceDef.requiredExpansionDef, ExpansionRulesCatalog.disableExpansionItemsChoices);
-                }
-                return result;
+                return true;
             });
+            c.Emit(OpCodes.And);
         }
         else ExpansionManagerPlugin.Logger.LogError($"{nameof(ItemBlockers)}: {nameof(PreGameController_RecalculateModifierAvailability)} IL match failed");
     }
@@ -108,10 +115,22 @@ public static class ItemBlockers
         foreach (CraftableCatalog.RecipeEntry entry in source)
         {
             PickupDef pickup = PickupCatalog.GetPickupDef(entry.result);
-            if (Run.instance.IsPickupAvailable(entry.result) || pickup.itemIndex == DLC3Content.Items.MasterCore.itemIndex || pickup.equipmentIndex == DLC3Content.Equipment.EliteCollectiveEquipment.equipmentIndex)
+            if (!Run.instance.IsPickupAvailable(entry.result))
             {
-                list.Add(entry);
+                ItemDef itemDef = ItemCatalog.GetItemDef(pickup.itemIndex);
+                EquipmentIndex equipmentIndex = pickup.equipmentIndex;
+                if (itemDef)
+                {
+                    if (itemDef.tier is ItemTier.FoodTier || itemDef.DoesNotContainTag(ItemTag.WorldUnique))
+                        continue;
+                }
+                else if (equipmentIndex is not EquipmentIndex.None)
+                {
+                    if (EquipmentCatalog.GetEquipmentDef(equipmentIndex).canDrop)
+                        continue;
+                }
             }
+            list.Add(entry);
         }
         source = list.ToArray();
     }
