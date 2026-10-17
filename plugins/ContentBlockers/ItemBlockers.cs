@@ -25,7 +25,7 @@ public static class ItemBlockers
                 deathRewards.bossDropTable = null;
             }
             PickupDef pickupDef = PickupCatalog.GetPickupDef((PickupIndex)deathRewards.bossPickup);
-            if (pickupDef != null && (pickupDef.itemIndex != ItemIndex.None || pickupDef.equipmentIndex != EquipmentIndex.None))
+            if (pickupDef != null)
             {
                 ExpansionDef requiredExpansion = pickupDef.GetRequiredExpansion();
                 if (requiredExpansion && Run.instance.AreExpansionItemsDisabled(requiredExpansion))
@@ -46,27 +46,11 @@ public static class ItemBlockers
         for (int i = self.weightedSelection.Count; --i >= 0;)
         {
             PickupIndex pickupIndex = self.weightedSelection.GetChoice(i).value.pickupIndex;
-            PickupDef pickupDef = PickupCatalog.GetPickupDef(pickupIndex);
-            if (pickupDef != null)
+            if (IsValid(pickupIndex))
             {
-                ItemIndex itemIndex = pickupDef.itemIndex;
-                if (itemIndex is not ItemIndex.None)
-                {
-                    if (ItemCatalog.GetItemDef(itemIndex).ContainsTag(ItemTag.WorldUnique))
-                    {
-                        continue;
-                    }
-                }
-                else if (pickupDef.equipmentIndex is EquipmentIndex.None)
-                {
-                    continue;
-                }
-                ExpansionDef requiredExpansion = pickupDef.GetRequiredExpansion();
-                if (requiredExpansion && Run.instance.AreExpansionItemsDisabled(requiredExpansion))
-                {
-                    self.weightedSelection.RemoveChoice(i);
-                }
+                continue;
             }
+            self.weightedSelection.RemoveChoice(i);
         }
     }
 
@@ -83,27 +67,19 @@ public static class ItemBlockers
         {
             c.Emit(OpCodes.Ldarg_0);
             c.Emit(OpCodes.Ldloc, locChoiceDefIndex);
-            c.EmitDelegate((PreGameController controller, RuleChoiceDef choice) =>
+            c.EmitDelegate((bool isChoiceActive, PreGameController controller, RuleChoiceDef choice) =>
             {
-                if (ExpansionRulesCatalog.IsExpansionContentDisabled(controller.readOnlyRuleBook, choice.requiredExpansionDef, ExpansionRulesCatalog.disableExpansionItemsChoices))
+                ExpansionDef requiredExpansion = choice.requiredExpansionDef;
+                if (requiredExpansion)
                 {
-                    ItemDef itemDef = ItemCatalog.GetItemDef(choice.itemIndex);
-                    if (itemDef)
+                    requiredExpansion = GetRequiredExpansion(choice.itemIndex, choice.equipmentIndex);
+                    if (ExpansionRulesCatalog.IsExpansionContentDisabled(controller.readOnlyRuleBook, requiredExpansion, ExpansionRulesCatalog.disableExpansionItemsChoices))
                     {
-                        return itemDef.ContainsTag(ItemTag.WorldUnique) && itemDef.tier is not ItemTier.FoodTier;
-                    }
-                    else
-                    {
-                        EquipmentDef equipmentDef = EquipmentCatalog.GetEquipmentDef(choice.equipmentIndex);
-                        if (equipmentDef)
-                        {
-                            return equipmentDef.IsElite();
-                        }
+                        return false;
                     }
                 }
-                return true;
+                return isChoiceActive;
             });
-            c.Emit(OpCodes.And);
         }
         else ExpansionManagerPlugin.Logger.LogError($"{nameof(ItemBlockers)}: {nameof(PreGameController_RecalculateModifierAvailability)} IL match failed");
     }
@@ -111,27 +87,58 @@ public static class ItemBlockers
     private static void CraftableCatalog_FilterByEntitlement(On.RoR2.CraftableCatalog.orig_FilterByEntitlement orig, ref CraftableCatalog.RecipeEntry[] source)
     {
         orig(ref source);
-        var list = new List<CraftableCatalog.RecipeEntry>();
-        foreach (CraftableCatalog.RecipeEntry entry in source)
+        source = source.Where((CraftableCatalog.RecipeEntry entry) => IsValid(entry.result)).ToArray();
+    }
+
+    public static bool IsValid(PickupIndex pickupIndex)
+    {
+        if (pickupIndex != PickupIndex.none)
         {
-            PickupDef pickup = PickupCatalog.GetPickupDef(entry.result);
-            if (!Run.instance.IsPickupAvailable(entry.result))
+            PickupDef pickupDef = PickupCatalog.GetPickupDef(pickupIndex);
+            if (pickupDef is not null)
             {
-                ItemDef itemDef = ItemCatalog.GetItemDef(pickup.itemIndex);
-                EquipmentIndex equipmentIndex = pickup.equipmentIndex;
-                if (itemDef)
+                ExpansionDef requiredExpansion = GetRequiredExpansion(pickupDef.itemIndex, pickupDef.equipmentIndex);
+                if (Run.instance.AreExpansionItemsDisabled(requiredExpansion))
+                    return false;
+            }
+        }
+        return true;
+    }
+
+    public static ExpansionDef GetRequiredExpansion(ItemIndex itemIndex, EquipmentIndex equipmentIndex)
+    {
+        ExpansionDef requiredExpansion = null;
+        if (itemIndex != ItemIndex.None)
+        {
+            ItemDef itemDef = ItemCatalog.GetItemDef(itemIndex);
+            if (itemDef)
+            {
+                switch (itemDef.tier)
                 {
-                    if (itemDef.tier is ItemTier.FoodTier || itemDef.DoesNotContainTag(ItemTag.WorldUnique))
-                        continue;
-                }
-                else if (equipmentIndex is not EquipmentIndex.None)
-                {
-                    if (EquipmentCatalog.GetEquipmentDef(equipmentIndex).canDrop)
-                        continue;
+                    case ItemTier.Hex:
+                    case ItemTier.Page:
+                        break;
+
+                    default:
+                        if (itemDef.ContainsTag(ItemTag.WorldUnique))
+                            break;
+                        goto case ItemTier.FoodTier;
+
+                    case ItemTier.FoodTier:
+                        requiredExpansion = itemDef.requiredExpansion;
+                        break;
                 }
             }
-            list.Add(entry);
         }
-        source = list.ToArray();
+        else if (equipmentIndex != EquipmentIndex.None)
+        {
+            EquipmentDef equipmentDef = EquipmentCatalog.GetEquipmentDef(equipmentIndex);
+            if (equipmentDef && equipmentDef.canDrop)
+            {
+                requiredExpansion = equipmentDef.requiredExpansion;
+            }
+        }
+
+        return requiredExpansion;
     }
 }

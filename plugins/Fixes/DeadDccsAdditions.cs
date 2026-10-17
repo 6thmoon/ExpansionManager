@@ -28,6 +28,8 @@ public static class DeadDccsAdditions
         { "dccsRepurposedcraterMonstersDLC1", RepurposedCraterMonstersDLC1 },
         { "dccsConduitcanyonMonsters", ConduitCanyonMonsters },
         { "dccsBallFamily_ItemThemed", BallFamily_ItemThemed },
+        { "dccsFungalMonsters", FungalMonsters },
+        { "dccsMireMonsters", MireMonsters },
     };
 
     public static AsyncOperationHandle<SpawnCard>
@@ -42,7 +44,11 @@ public static class DeadDccsAdditions
         cscMinorConstruct = Addressables.LoadAssetAsync<SpawnCard>("RoR2/DLC1/MajorAndMinorConstruct/cscMinorConstruct.asset"),
         cscMiniMushroom = Addressables.LoadAssetAsync<SpawnCard>("RoR2/Base/MiniMushroom/cscMiniMushroom.asset"),
         cscImp = Addressables.LoadAssetAsync<SpawnCard>("RoR2/Base/Imp/cscImp.asset"),
-        cscRoboBallBoss = Addressables.LoadAssetAsync<SpawnCard>("RoR2/Base/RoboBallBoss/cscRoboBallBoss.asset");
+        cscRoboBallBoss = Addressables.LoadAssetAsync<SpawnCard>("RoR2/Base/RoboBallBoss/cscRoboBallBoss.asset"),
+        cscBeetleQueen = Addressables.LoadAssetAsync<SpawnCard>("RoR2/Base/BeetleQueen/cscBeetleQueen.asset"),
+        cscClayGrenadier = Addressables.LoadAssetAsync<SpawnCard>("RoR2/DLC1/ClayGrenadier/cscClayGrenadier.asset"),
+        cscTitanBlackBeach = Addressables.LoadAssetAsync<SpawnCard>("RoR2/Base/Titan/cscTitanBlackBeach.asset"),
+        cscVagrant = Addressables.LoadAssetAsync<SpawnCard>("RoR2/Base/Vagrant/cscVagrant.asset");
 
     public static void AncientLoftMonstersDLC1(DirectorCardCategorySelection dccs)
     {
@@ -140,6 +146,39 @@ public static class DeadDccsAdditions
         dccs.AttemptAddCard(BASIC_MONSTERS, new DirectorCard
         {
             spawnCard = cscRoboBallMini.WaitForCompletion(),
+            selectionWeight = 1,
+        });
+    }
+
+    public static void FungalMonsters(DirectorCardCategorySelection dccs)
+    {
+        dccs.AttemptAddCard(CHAMPIONS, new DirectorCard
+        {
+            spawnCard = cscBeetleQueen.WaitForCompletion(),
+            selectionWeight = 1,
+        });
+        dccs.AttemptAddCard(MINIBOSSES, new DirectorCard
+        {
+            spawnCard = cscClayGrenadier.WaitForCompletion(),
+            selectionWeight = 1,
+        });
+    }
+
+    public static void MireMonsters(DirectorCardCategorySelection dccs)
+    {
+        dccs.AttemptAddCard(CHAMPIONS, new DirectorCard
+        {
+            spawnCard = cscTitanBlackBeach.WaitForCompletion(),
+            selectionWeight = 1,
+        });
+        dccs.AttemptAddCard(CHAMPIONS, new DirectorCard
+        {
+            spawnCard = cscVagrant.WaitForCompletion(),
+            selectionWeight = 1,
+        });
+        dccs.AttemptAddCard(BASIC_MONSTERS, new DirectorCard
+        {
+            spawnCard = cscLesserWisp.WaitForCompletion(),
             selectionWeight = 1,
         });
     }

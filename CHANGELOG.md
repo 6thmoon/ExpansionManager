@@ -1,5 +1,8 @@
+#### `1.2.2`
+- *Hallowed Concepts* support
+
 #### `1.2.0`, `1.2.1`
-- Hotfix for *Hallowed Concepts* update; does not yet handle any of the new content
+- Hotfix for game update; does not yet handle any of the new content
 
 #### `1.1.4`
 - Fix off-by-one indexing bug that could completely break on custom drop tables

@@ -9,6 +9,8 @@ public static class DropTableFallbacks
         { "dtVoidChest", "dtChest1" },
         { "dtShrineHalcyoniteTier1", "dtShrineHalcyoniteTier3" }, // Tiers 1 and 2 are only halcyonite items, Tier 3 is no halcyonite items
         { "dtShrineHalcyoniteTier2", "dtShrineHalcyoniteTier3" },
+        { "dtCursedItemTable", "dtDuplicatorWild" },
+        { "bdtHallowedCauldron_HighGrade", "dtTier3Item" },
     };
 
     public static bool DropTableFallback(PickupDropTable dropTable, out PickupDropTable fallbackDropTable)
@@ -28,6 +30,8 @@ public static class DropTableFallbacks
         On.RoR2.PickupDropTable.GenerateDistinctPickups += PickupDropTable_GenerateDistinctPickups;
         On.RoR2.PickupDropTable.GenerateDrop += PickupDropTable_GenerateDrop;
         On.RoR2.PickupDropTable.GenerateUniqueDrops += PickupDropTable_GenerateUniqueDrops;
+        On.EntityStates.HallowedCauldron.DrainingItems.GetDropTable += DrainingItems_GetDropTable;
+        On.EntityStates.TeleporterCatastrophe.DLC4.Teleporter.OverchargingState.OnEnter += OverchargingState_OnEnter;
     }
 
     private static void PickupDropTable_GenerateDistinctPickups(On.RoR2.PickupDropTable.orig_GenerateDistinctPickups orig, PickupDropTable self, List<UniquePickup> dest, int desiredCount, Xoroshiro128Plus rng, bool allowLoop = true)
@@ -69,5 +73,36 @@ public static class DropTableFallbacks
 #pragma warning restore CS0618 // Type or member is obsolete
         }
         return orig(self, rng);
+    }
+
+    private static DrainItemsAndDropMultiChoicePotentialController.DropTier DrainingItems_GetDropTable(On.EntityStates.HallowedCauldron.DrainingItems.orig_GetDropTable orig, EntityStates.HallowedCauldron.DrainingItems self, int tier)
+    {
+        var dropTier = orig(self, tier);
+        if (Run.instance.AreExpansionItemsDisabled(DLC4Content.DLC4))
+        {
+            if (fallbacksDictionary.TryGetValue(dropTier.dropTable.name, out string fallbackName))
+            {
+                dropTier = new DrainItemsAndDropMultiChoicePotentialController.DropTier
+                {
+                    dropTable = PickupDropTable.instancesList.Find(x => x.name == fallbackName),
+                    optionsModifier = dropTier.optionsModifier,
+                    displayColorIndex = dropTier.displayColorIndex
+                };
+            }
+        }
+        return dropTier;
+    }
+
+    private static void OverchargingState_OnEnter(On.EntityStates.TeleporterCatastrophe.DLC4.Teleporter.OverchargingState.orig_OnEnter orig, EntityStates.TeleporterCatastrophe.DLC4.Teleporter.OverchargingState self)
+    {
+        orig(self);
+        if (Run.instance.AreExpansionItemsDisabled(DLC4Content.DLC4))
+        {
+            BossGroup bossGroup = self.extraBossGroupServer;
+            if (bossGroup)
+            {
+                bossGroup.bossDropChance = 1;
+            }
+        }
     }
 }

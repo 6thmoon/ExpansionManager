@@ -20,7 +20,7 @@ public class ExpansionManagerPlugin : BaseUnityPlugin
     public const string
             GUID = "groovesalad." + NAME,
             NAME = "ExpansionManager",
-            VERSION = "1.2.1";
+            VERSION = "1.2.2";
 
     public static new ManualLogSource Logger { get; private set; }
 

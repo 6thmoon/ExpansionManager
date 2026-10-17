@@ -47,17 +47,14 @@ public static class MissingExpansionRequirement
             prefab = handle;
             yield return add();
         }
-        Stage.onServerStageBegin += instance =>
+        expansion = Addressables.LoadAssetAsync<ExpansionDef>("RoR2/DLC4/DLC4.asset");
+        while (!expansion.IsDone)
         {
-            SceneDef scene = instance.sceneDef;
-            if (scene && Run.instance.AreExpansionInteractablesDisabled(expansion.Result) && scene.cachedName is "computationalexchange")
-            {
-                GameObject obj = GameObject.Find("/HOLDER: Interactables/GROUP: Drone Zone/DroneCombinerStation");
-                if (obj)
-                {
-                    obj.SetActive(false);
-                }
-            }
-        };
+            yield return null;
+        }
+        prefab = Addressables.LoadAssetAsync<GameObject>("RoR2/DLC4/HollowChest/HollowChestFree.prefab");
+        yield return add();
+        prefab = Addressables.LoadAssetAsync<GameObject>("RoR2/DLC4/ShrineCompulsion/ShrineCompulsion.prefab");
+        yield return add();
     }
 }
