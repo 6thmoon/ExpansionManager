@@ -13,7 +13,7 @@ public static class ExpansionRulesCatalog
         public ExpansionDef expansionDef;
     }
 
-    // For other mod devs maybe
+    // Intended to be used by other mod developers.
     public static event Action<ExpansionDef, RuleCategoryDef> GenerateRulesForExpansion;
 
     public static readonly Dictionary<ExpansionIndex, RuleCategoryDef> expansionByRuleCategory = [];
@@ -60,8 +60,6 @@ public static class ExpansionRulesCatalog
         foreach (ExpansionDef expansionDef in ExpansionCatalog.expansionDefs)
         {
             RuleCategoryDef ruleCategory = RuleCatalog.AddCategory(expansionDef.nameToken, expansionDef.descriptionToken, new Color32(219, 114, 114, byte.MaxValue), null, "RULE_HEADER_EXPANSIONS_EDIT", RuleCatalog.HiddenTestFalse, RuleCatalog.RuleCategoryType.VoteResultGrid);
-            expansionByRuleCategory[expansionDef.expansionIndex] = ruleCategory;
-            ruleCategoryByExpansion[ruleCategory] = expansionDef;
 
             if (Array.Exists(ContentManager.sceneDefs, StageMatchesExpansion))
             {
@@ -84,15 +82,21 @@ public static class ExpansionRulesCatalog
                 RuleCatalog.AddRule(GenerateContentRule(expansionDef, "Items", texRuleExpansionItemsOn, texRuleExpansionItemsOff, disableExpansionItemsChoices));
             }
 
-            if (GenerateRulesForExpansion != null)
+            GenerateRulesForExpansion?.Invoke(expansionDef, ruleCategory);
+
+            if (ruleCategory.children.Any())
             {
-                GenerateRulesForExpansion(expansionDef, ruleCategory);
-                GenerateRulesForExpansion = null;
+                expansionByRuleCategory[expansionDef.expansionIndex] = ruleCategory;
+                ruleCategoryByExpansion[ruleCategory] = expansionDef;
+            }
+            else
+            {
+                RuleCatalog.allCategoryDefs.Remove(ruleCategory);
             }
 
             bool ItemMatchesExpansion(ItemDef itemDef)
             {
-                return itemDef.requiredExpansion == expansionDef;
+                return itemDef.requiredExpansion == expansionDef && itemDef.tier != ItemTier.NoTier;
             }
             bool EquipmentMatchesExpansion(EquipmentDef equipmentDef)
             {
@@ -120,7 +124,7 @@ public static class ExpansionRulesCatalog
             }
             bool InteractableMatchesExpansion(GameObject networkedObjectPrefab)
             {
-                return networkedObjectPrefab.TryGetComponent(out ExpansionRequirementComponent expansionRequirement) && expansionRequirement.requiredExpansion == expansionDef;
+                return networkedObjectPrefab.TryGetComponent(out ExpansionRequirementComponent expansionRequirement) && expansionRequirement.requiredExpansion == expansionDef && networkedObjectPrefab.GetComponentInChildren<IInteractable>() as Object;
             }
         }
     }
